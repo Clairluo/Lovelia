@@ -79,11 +79,11 @@
                 54% 20%, 64% 18%, 74% 20%, 82% 26%, 88% 34%, 89% 44%,
                 86% 54%, 80% 64%, 72% 74%, 62% 84%
             );
-            animation: heartFly 7s ease-out forwards;
+            animation: heartFly 6s ease-out forwards;
         }
         @keyframes heartFly {
             0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-110vh) scale(0.25); }
+            100% { opacity: 0; transform: translateY(-100vh) scale(0.3); }
         }
         #winModal {
             position: fixed;
@@ -138,9 +138,6 @@
         let winTriggered = false;
         let musicStarted = false;
         let audioPlayer = null;
-        let heartLoopTimer = null;
-        let heartList = [];
-        const MAX_HEART = 25; //页面最多同时存在25颗爱心，防止越堆越多
 
         const imageConfig = [
             { src: "photo1.png", point: 1 },
@@ -154,10 +151,6 @@
                 audioPlayer.pause();
                 audioPlayer.currentTime = 0;
                 musicStarted = false;
-                if(heartLoopTimer){
-                    clearInterval(heartLoopTimer);
-                    heartLoopTimer = null;
-                }
             }
         };
         closeModalBtn.onclick = function(){
@@ -206,6 +199,7 @@
             scoreBox.innerText = "当前分数：" + score;
         }
 
+        // 分数≥2开启音乐循环，**游玩全程不生成爱心**
         function checkMusic() {
             if (score >= 2 && !musicStarted) {
                 musicStarted = true;
@@ -213,44 +207,40 @@
                 audioPlayer.volume = 0.6;
                 audioPlayer.loop = true;
                 audioPlayer.play().catch(err=>{
-                    console.log("音乐等待用户点击触发",err);
+                    console.log("音乐需要用户点击触发",err);
                 });
-                startContinuousHeart();
             }
         }
 
-        function startContinuousHeart(){
-            const colors = ["#ff4466", "#ff6699", "#ff88bb", "#ff3388", "#ff5588", "#ff99cc", "#ff1155"];
-            heartLoopTimer = setInterval(()=>{
-                if(heartList.length >= MAX_HEART) return;
-                const h = document.createElement("div");
-                h.className = "heart";
-                const size = 25 + Math.random() * 45;
-                h.style.width = size + "px";
-                h.style.height = size + "px";
-                h.style.background = colors[Math.floor(Math.random() * colors.length)];
-                h.style.left = Math.random() * window.innerWidth + "px";
-                const minY = window.innerHeight * 0.35;
-                const maxY = window.innerHeight;
-                h.style.bottom = (Math.random()*(maxY - minY)) + "px";
-                document.body.appendChild(h);
-                heartList.push(h);
-                setTimeout(()=>{
-                    h.remove();
-                    const idx = heartList.indexOf(h);
-                    if(idx>-1) heartList.splice(idx,1);
-                },7000);
-            },450);
-        }
-
+        // 只有52分通关瞬间，才爆发爱心
         function checkWin() {
             if (score >= targetScore && !winTriggered) {
                 winTriggered = true;
                 winModal.style.display = "flex";
+                fireHeartBurst();
             }
         }
 
-        setInterval(createRandomItem, 1800);
+        // 通关一次性爆发爱心，分批输出，避免瞬间爆卡
+        function fireHeartBurst(){
+            const colors = ["#ff4466", "#ff6699", "#ff88bb", "#ff3388", "#ff5588", "#ff99cc", "#ff1155"];
+            for(let i=0;i<60;i++){
+                setTimeout(()=>{
+                    const h = document.createElement("div");
+                    h.className = "heart";
+                    const size = 25 + Math.random() * 40;
+                    h.style.width = size + "px";
+                    h.style.height = size + "px";
+                    h.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    h.style.left = Math.random() * window.innerWidth + "px";
+                    h.style.bottom = Math.random() * window.innerHeight + "px";
+                    document.body.appendChild(h);
+                    setTimeout(()=>h.remove(),6000);
+                }, i*35);
+            }
+        }
+
+        setInterval(createRandomItem, 2200);
     </script>
 </body>
 </html>

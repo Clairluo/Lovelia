@@ -27,7 +27,6 @@
             color: #ff4466;
             z-index: 300;
         }
-        /* ✅提升z-index，放到弹窗最上层，弹窗出来也能点 */
         #stopMusicBtn{
             position: fixed;
             top:30px;
@@ -70,7 +69,6 @@
             0% { opacity: 1; transform: translateY(0); }
             100% { opacity: 0; transform: translateY(-60px); }
         }
-        /* 爱心形状 */
         .heart {
             position: absolute;
             pointer-events: none;
@@ -109,7 +107,6 @@
             0% { transform: scale(0.3); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
-        /* ✅新增：关闭合照弹窗按钮 */
         #closeModalBtn{
             margin-top:24px;
             padding:10px 20px;
@@ -150,7 +147,6 @@
             { src: "photo4.png", point: -2 }
         ];
 
-        // 关闭音乐
         stopBtn.onclick = function(){
             if(audioPlayer){
                 audioPlayer.pause();
@@ -162,7 +158,6 @@
                 }
             }
         };
-        // ✅关闭合照弹窗按钮
         closeModalBtn.onclick = function(){
             winModal.style.display = "none";
         };
@@ -224,6 +219,7 @@
 
         function startContinuousHeart(){
             const colors = ["#ff4466", "#ff6699", "#ff88bb", "#ff3388", "#ff5588", "#ff99cc", "#ff1155"];
+            // 🔧调大间隔，降低生成速度，缓解手机卡顿
             heartLoopTimer = setInterval(()=>{
                 const h = document.createElement("div");
                 h.className = "heart";
@@ -232,10 +228,13 @@
                 h.style.height = size + "px";
                 h.style.background = colors[Math.floor(Math.random() * colors.length)];
                 h.style.left = Math.random() * window.innerWidth + "px";
-                h.style.bottom = "0px";
+                // ✅爱心生成范围：屏幕高度的35%~100%，避开顶部操作区，下半屏幕到处出现，不会盖住按钮分数
+                const minY = window.innerHeight * 0.35;
+                const maxY = window.innerHeight;
+                h.style.bottom = (Math.random()*(maxY - minY)) + "px";
                 document.body.appendChild(h);
                 setTimeout(()=>h.remove(),7000);
-            },220);
+            },350); // 原来220 →改成350，减少爱心生成数量，解决卡顿、图片点不动
         }
 
         function checkWin() {

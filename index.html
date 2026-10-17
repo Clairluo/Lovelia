@@ -25,9 +25,9 @@
             font-size: 32px;
             font-weight: bold;
             color: #ff4466;
-            z-index: 100;
+            z-index: 300;
         }
-        /* 关闭音乐按钮 右上角 */
+        /* ✅提升z-index，放到弹窗最上层，弹窗出来也能点 */
         #stopMusicBtn{
             position: fixed;
             top:30px;
@@ -38,7 +38,8 @@
             background:#ff6688;
             color:white;
             font-size:16px;
-            z-index:101;
+            z-index:301;
+            cursor:pointer;
         }
         .item {
             position: absolute;
@@ -69,19 +70,18 @@
             0% { opacity: 1; transform: translateY(0); }
             100% { opacity: 0; transform: translateY(-60px); }
         }
-        /* ✅真正爱心，clip-path裁切，不再是菱形 */
+        /* 爱心形状 */
         .heart {
             position: absolute;
             pointer-events: none;
             will-change: transform, opacity;
-            /* 爱心形状裁切 */
             clip-path: polygon(
                 50% 92%, 38% 84%, 28% 74%, 20% 64%, 14% 54%, 11% 44%,
                 12% 34%, 18% 26%, 26% 20%, 36% 18%, 46% 20%, 50% 26%,
                 54% 20%, 64% 18%, 74% 20%, 82% 26%, 88% 34%, 89% 44%,
                 86% 54%, 80% 64%, 72% 74%, 62% 84%
             );
-            animation: heartFly 7s ease‑out forwards;
+            animation: heartFly 7s ease-out forwards;
         }
         @keyframes heartFly {
             0% { opacity: 1; transform: translateY(0) scale(1); }
@@ -109,6 +109,17 @@
             0% { transform: scale(0.3); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
+        /* ✅新增：关闭合照弹窗按钮 */
+        #closeModalBtn{
+            margin-top:24px;
+            padding:10px 20px;
+            border:none;
+            border-radius:999px;
+            background:#ff6688;
+            color:#fff;
+            font-size:18px;
+            cursor:pointer;
+        }
     </style>
 </head>
 <body>
@@ -116,12 +127,14 @@
     <button id="stopMusicBtn">关闭音乐</button>
     <div id="winModal">
         <img src="end_bonus.png" alt="合照">
+        <button id="closeModalBtn">关闭图片</button>
     </div>
 
     <script>
         const scoreBox = document.getElementById("scoreBox");
         const winModal = document.getElementById("winModal");
         const stopBtn = document.getElementById("stopMusicBtn");
+        const closeModalBtn = document.getElementById("closeModalBtn");
 
         let score = 0;
         const targetScore = 52;
@@ -137,18 +150,21 @@
             { src: "photo4.png", point: -2 }
         ];
 
-        // 关闭音乐按钮逻辑
+        // 关闭音乐
         stopBtn.onclick = function(){
             if(audioPlayer){
                 audioPlayer.pause();
                 audioPlayer.currentTime = 0;
                 musicStarted = false;
-                // 音乐关闭，停止持续生成爱心
                 if(heartLoopTimer){
                     clearInterval(heartLoopTimer);
                     heartLoopTimer = null;
                 }
             }
+        };
+        // ✅关闭合照弹窗按钮
+        closeModalBtn.onclick = function(){
+            winModal.style.display = "none";
         };
 
         function showFloatText(x, y, text, isAdd) {
@@ -193,7 +209,6 @@
             scoreBox.innerText = "当前分数：" + score;
         }
 
-        // 分数≥2启动音乐
         function checkMusic() {
             if (score >= 2 && !musicStarted) {
                 musicStarted = true;
@@ -203,12 +218,10 @@
                 audioPlayer.play().catch(err=>{
                     console.log("音乐等待用户点击触发",err);
                 });
-                // ✅音乐播放期间，持续源源不断生成爱心，直到音乐被关掉
                 startContinuousHeart();
             }
         }
 
-        // 持续生成爱心：音乐播放就一直飘爱心，音乐关闭就停止
         function startContinuousHeart(){
             const colors = ["#ff4466", "#ff6699", "#ff88bb", "#ff3388", "#ff5588", "#ff99cc", "#ff1155"];
             heartLoopTimer = setInterval(()=>{

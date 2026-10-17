@@ -139,6 +139,8 @@
         let musicStarted = false;
         let audioPlayer = null;
         let heartLoopTimer = null;
+        let heartList = [];
+        const MAX_HEART = 25; //页面最多同时存在25颗爱心，防止越堆越多
 
         const imageConfig = [
             { src: "photo1.png", point: 1 },
@@ -219,8 +221,8 @@
 
         function startContinuousHeart(){
             const colors = ["#ff4466", "#ff6699", "#ff88bb", "#ff3388", "#ff5588", "#ff99cc", "#ff1155"];
-            // 🔧调大间隔，降低生成速度，缓解手机卡顿
             heartLoopTimer = setInterval(()=>{
+                if(heartList.length >= MAX_HEART) return;
                 const h = document.createElement("div");
                 h.className = "heart";
                 const size = 25 + Math.random() * 45;
@@ -228,13 +230,17 @@
                 h.style.height = size + "px";
                 h.style.background = colors[Math.floor(Math.random() * colors.length)];
                 h.style.left = Math.random() * window.innerWidth + "px";
-                // ✅爱心生成范围：屏幕高度的35%~100%，避开顶部操作区，下半屏幕到处出现，不会盖住按钮分数
                 const minY = window.innerHeight * 0.35;
                 const maxY = window.innerHeight;
                 h.style.bottom = (Math.random()*(maxY - minY)) + "px";
                 document.body.appendChild(h);
-                setTimeout(()=>h.remove(),7000);
-            },350); // 原来220 →改成350，减少爱心生成数量，解决卡顿、图片点不动
+                heartList.push(h);
+                setTimeout(()=>{
+                    h.remove();
+                    const idx = heartList.indexOf(h);
+                    if(idx>-1) heartList.splice(idx,1);
+                },7000);
+            },450);
         }
 
         function checkWin() {

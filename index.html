@@ -19,84 +19,139 @@
         background: #fff0f5;
     }
 
-    /* 顶部标题+进度条 */
-    .headerWrap {
+    /* 顶部整条进度栏 */
+    .topBar {
         position: fixed;
-        top: 24px;
-        left: 24px;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 16px 24px;
+        background: rgba(255, 240, 245, 0.92);
+        border-bottom: 2px solid #ffd6e0;
         z-index: 300;
+        display: flex;
+        align-items: center;
+        gap: 16px;
     }
-    #titleTip {
-        font-size: 22px;
+
+    .gameTitle {
+        font-size: 24px;
+        font-weight: 900;
         color: #ff4466;
-        font-weight: bold;
-        margin-bottom: 8px;
+        white-space: nowrap;
     }
+
+    .scoreText {
+        font-size: 20px;
+        font-weight: bold;
+        color: #bb2244;
+        white-space: nowrap;
+    }
+
     .progressBg {
-        width: 260px;
-        height: 22px;
+        flex: 1;
+        height: 24px;
         background: #ffd6e0;
         border-radius: 999px;
         overflow: hidden;
     }
+
     #progressFill {
         height: 100%;
         width: 0%;
-        background: #ff4466;
+        background: linear-gradient(90deg, #ff6688, #ff4466, #ff2244);
         transition: width 0.35s ease-out;
     }
 
     /* 右上角按钮 */
     #stopMusicBtn {
-        position: fixed;
-        top: 24px;
-        right: 24px;
         padding: 8px 14px;
         border: none;
         border-radius: 999px;
         background: #ff6688;
         color: white;
         font-size: 16px;
-        z-index: 301;
         cursor: pointer;
+        z-index: 301;
     }
+
     #restartBtn {
-        position: fixed;
-        top: 64px;
-        right: 24px;
         padding: 6px 12px;
         border: none;
         border-radius: 999px;
         background: #dd4466;
         color: #fff;
         font-size: 14px;
-        z-index: 301;
         cursor: pointer;
+        z-index: 301;
     }
 
-    /* 右侧照片区域 画面右2/3 */
+    /* 右侧照片区域：画面右2/3 */
     #photoArea {
         position: fixed;
-        top: 0;
+        top: 72px;
         right: 0;
         width: 66.67%;
-        height: 100%;
+        height: calc(100% - 72px);
         z-index: 10;
     }
 
+    /* 照片放大 */
     .item {
         position: absolute;
         cursor: pointer;
-        transition: transform 0.1s;
+        transition: transform 0.15s;
     }
+
+    .item:hover {
+        transform: scale(1.06);
+    }
+
     .item:active {
-        transform: scale(0.85);
+        transform: scale(0.92);
     }
+
     .gameImg {
-        width: 80px;
+        width: 160px;
         height: auto;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-radius: 18px;
+        box-shadow: 0 10px 24px rgba(255, 80, 120, 0.35);
+        border: 3px solid #ffb6c8;
+    }
+
+    /* 分值弹出文字 */
+    .scorePopup {
+        position: absolute;
+        font-size: 32px;
+        font-weight: 900;
+        pointer-events: none;
+        text-shadow: 0 3px 10px rgba(255, 255, 255, 0.9), 0 0 18px rgba(255, 100, 150, 0.6);
+        animation: scoreUp 0.9s ease-out forwards;
+        z-index: 200;
+        white-space: nowrap;
+    }
+
+    .scoreAdd {
+        color: #ff2244;
+    }
+
+    .scoreMinus {
+        color: #6a3a7a;
+    }
+
+    @keyframes scoreUp {
+        0% {
+            opacity: 0;
+            transform: translateY(20px) scale(0.8);
+        }
+        20% {
+            opacity: 1;
+            transform: translateY(-10px) scale(1.15);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(-70px) scale(1);
+        }
     }
 
     /* 爱心样式 */
@@ -110,10 +165,12 @@
             86% 54%, 80% 64%, 72% 74%, 62% 84%
         );
     }
+
     @keyframes heartFlyNormal {
         0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
         100% { opacity: 0; transform: translateY(-110vh) rotate(15deg) scale(0.3); }
     }
+
     @keyframes heartFlyCrazy {
         0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
         100% { opacity: 0; transform: translateY(-120vh) rotate(30deg) scale(0.25); }
@@ -126,47 +183,51 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.5);
+        background: rgba(0, 0, 0, 0.55);
         display: none;
-        z-index: 200;
+        z-index: 400;
         align-items: center;
         justify-content: center;
         flex-direction: column;
     }
+
     #winModal img {
-        max-width: 85%;
-        max-height: 75vh;
-        border-radius: 16px;
-        box-shadow: 0 0 40px rgba(255,100,150,0.6);
+        max-width: 80%;
+        max-height: 70vh;
+        border-radius: 20px;
+        box-shadow: 0 0 50px rgba(255, 100, 150, 0.8);
         animation: popIn 0.5s ease-out;
     }
+
     @keyframes popIn {
         0% { transform: scale(0.3); opacity: 0; }
         100% { transform: scale(1); opacity: 1; }
     }
+
     #closeModalBtn {
-        margin-top: 24px;
-        padding: 10px 20px;
+        margin-top: 28px;
+        padding: 12px 24px;
         border: none;
         border-radius: 999px;
-        background: #ff6688;
+        background: #ff4466;
         color: #fff;
         font-size: 18px;
+        font-weight: bold;
         cursor: pointer;
     }
 </style>
 </head>
 
 <body>
-    <div class="headerWrap">
-        <div id="titleTip">Lovelia</div>
+    <div class="topBar">
+        <div class="gameTitle">Lovelia</div>
+        <div class="scoreText" id="scoreText">0</div>
         <div class="progressBg">
             <div id="progressFill"></div>
         </div>
+        <button id="stopMusicBtn">关闭音乐</button>
+        <button id="restartBtn">重新开始</button>
     </div>
-
-    <button id="stopMusicBtn">关闭音乐</button>
-    <button id="restartBtn">重新开始</button>
 
     <div id="photoArea"></div>
 
@@ -176,6 +237,7 @@
     </div>
 
 <script>
+    const scoreText = document.getElementById("scoreText");
     const progressFill = document.getElementById("progressFill");
     const winModal = document.getElementById("winModal");
     const stopBtn = document.getElementById("stopMusicBtn");
@@ -184,40 +246,52 @@
     const photoArea = document.getElementById("photoArea");
 
     let progress = 0;
-    const MAX_PROGRESS = 52;
-    const MUSIC_TRIGGER = 1; // 拿到1分就播放音乐
+    const MAX_PROGRESS = 52; // 后台隐藏目标分数，界面不展示
+    const MUSIC_TRIGGER = 1;
     let winTriggered = false;
     let musicStarted = false;
     let audioPlayer = null;
     let heartTimer = null;
 
+    // 分值规则：第一张+1，第二张+2，第三张+3，第四张-2
     const imageConfig = [
-        { src: "photo1.png", progressAdd: 4 },
-        { src: "photo2.png", progressAdd: 6 },
-        { src: "photo3.png", progressAdd: 9 },
-        { src: "photo4.png", progressAdd: -4 }
+        { src: "photo1.png", progressAdd: 1, label: "+1" },
+        { src: "photo2.png", progressAdd: 2, label: "+2" },
+        { src: "photo3.png", progressAdd: 3, label: "+3" },
+        { src: "photo4.png", progressAdd: -2, label: "-2" }
     ];
 
-    // 重置游戏全部状态
-    function resetGame(){
+    // 更新分数和进度条
+    function updateScoreAndProgress() {
+        scoreText.textContent = progress;
+        // 进度条比例随当前分数/52变化，但是界面看不到52
+        const percent = Math.min((progress / MAX_PROGRESS) * 100,100);
+        progressFill.style.width = percent + "%";
+    }
+
+    // 重置游戏
+    function resetGame() {
         progress = 0;
         winTriggered = false;
         musicStarted = false;
-        progressFill.style.width = "0%";
+        updateScoreAndProgress();
         winModal.style.display = "none";
         photoArea.innerHTML = "";
 
-        if(audioPlayer){
+        if (audioPlayer) {
             audioPlayer.pause();
             audioPlayer.currentTime = 0;
             audioPlayer = null;
         }
-        if(heartTimer){
+
+        if (heartTimer) {
             clearInterval(heartTimer);
             heartTimer = null;
         }
+
         startNormalHeart();
     }
+
     restartBtn.onclick = resetGame;
 
     stopBtn.onclick = function () {
@@ -225,7 +299,8 @@
             audioPlayer.pause();
             audioPlayer.currentTime = 0;
             musicStarted = false;
-            if(heartTimer){
+
+            if (heartTimer) {
                 clearInterval(heartTimer);
                 heartTimer = null;
             }
@@ -236,10 +311,21 @@
         winModal.style.display = "none";
     };
 
-    // 普通爱心（开局就启动）
-    function startNormalHeart(){
-        const colors = ["#ff4466","#ff2255","#ff6699","#ff88bb","#ff3388","#ff5588","#ff99cc"];
-        heartTimer = setInterval(()=>{
+    // 分值弹出效果
+    function showScorePopup(x, y, label, isAdd) {
+        const div = document.createElement("div");
+        div.className = "scorePopup " + (isAdd ? "scoreAdd" : "scoreMinus");
+        div.textContent = label;
+        div.style.left = x + "px";
+        div.style.top = y + "px";
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 900);
+    }
+
+    // 普通爱心
+    function startNormalHeart() {
+        const colors = ["#ff4466", "#ff2255", "#ff6699", "#ff88bb", "#ff3388", "#ff5588", "#ff99cc"];
+        heartTimer = setInterval(() => {
             const h = document.createElement("div");
             h.className = "heart";
             const size = 30 + Math.random() * 45;
@@ -250,51 +336,54 @@
             h.style.bottom = Math.random() * window.innerHeight + "px";
             h.style.animation = "heartFlyNormal 7s ease-out forwards";
             document.body.appendChild(h);
-            setTimeout(()=>h.remove(),7000);
-        },200);
+            setTimeout(() => h.remove(), 7000);
+        }, 200);
     }
 
-    // 通关浮夸爱心，超多超快
-    function startCrazyHeart(){
+    // 通关浮夸爱心
+    function startCrazyHeart() {
         clearInterval(heartTimer);
-        const colors = ["#ff4466","#ff2255","#ff6699","#ff88bb","#ff3388","#ff5588","#ff99cc"];
-        heartTimer = setInterval(()=>{
-            for(let i=0;i<3;i++){
+        const colors = ["#ff4466", "#ff2255", "#ff6699", "#ff88bb", "#ff3388", "#ff5588", "#ff99cc"];
+        heartTimer = setInterval(() => {
+            for (let i = 0; i < 4; i++) {
                 const h = document.createElement("div");
                 h.className = "heart";
-                const size = 20 + Math.random() * 55;
+                const size = 25 + Math.random() * 55;
                 h.style.width = size + "px";
                 h.style.height = size + "px";
                 h.style.background = colors[Math.floor(Math.random() * colors.length)];
                 h.style.left = Math.random() * window.innerWidth + "px";
                 h.style.bottom = Math.random() * window.innerHeight + "px";
-                h.style.animation = "heartFlyCrazy 3.2s ease-out forwards";
+                h.style.animation = "heartFlyCrazy 2.8s ease-out forwards";
                 document.body.appendChild(h);
-                setTimeout(()=>h.remove(),3200);
+                setTimeout(() => h.remove(), 2800);
             }
-        },80);
+        }, 70);
     }
 
-    // 生成右侧照片
+    // 生成右侧大照片
     function createRandomItem() {
         const item = document.createElement("img");
         const randomItem = imageConfig[Math.floor(Math.random() * imageConfig.length)];
         item.src = randomItem.src;
         item.className = "item gameImg";
 
-        const areaWidth = photoArea.clientWidth || 600;
+        const areaWidth = photoArea.clientWidth || 700;
         const areaHeight = photoArea.clientHeight || 800;
-        const x = Math.random() * Math.max(40, areaWidth - 120);
-        const y = Math.random() * Math.max(40, areaHeight - 200) + 80;
+
+        const x = Math.random() * Math.max(40, areaWidth - 200);
+        const y = Math.random() * Math.max(40, areaHeight - 220) + 40;
 
         item.style.left = x + "px";
         item.style.top = y + "px";
 
-        item.onclick = function () {
+        item.onclick = function (e) {
             progress += randomItem.progressAdd;
-            if(progress < 0) progress = 0;
-            if(progress > MAX_PROGRESS) progress = MAX_PROGRESS;
-            progressFill.style.width = (progress / MAX_PROGRESS *100)+"%";
+            if (progress < 0) progress = 0;
+            if (progress > MAX_PROGRESS) progress = MAX_PROGRESS;
+
+            updateScoreAndProgress();
+            showScorePopup(e.clientX, e.clientY, randomItem.label, randomItem.progressAdd > 0);
 
             item.remove();
             checkMusic();
@@ -302,6 +391,7 @@
         };
 
         photoArea.appendChild(item);
+
         setTimeout(() => {
             if (item.parentNode) item.remove();
         }, 7000);
@@ -313,7 +403,7 @@
             audioPlayer = new Audio("win_music.mp3");
             audioPlayer.volume = 0.6;
             audioPlayer.loop = true;
-            audioPlayer.play().catch(err => console.log("浏览器需要点击页面后播放音频",err));
+            audioPlayer.play().catch(err => console.log("浏览器需要点击页面后播放音频", err));
         }
     }
 
@@ -325,9 +415,9 @@
         }
     }
 
-    // 页面加载立刻开启普通爱心
+    // 启动游戏
+    updateScoreAndProgress();
     startNormalHeart();
-    // 定时生成照片
     setInterval(createRandomItem, 1400);
 </script>
 </body>

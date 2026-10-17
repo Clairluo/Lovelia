@@ -2,20 +2,22 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>照片收集小游戏</title>
+    <!-- 手机视口优化，解决移动端缩放卡顿 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lovelia</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: system-ui, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
         html, body {
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background: #ffffff;
+            background: #fff0f5;
         }
         #scoreBox {
             position: fixed;
@@ -23,90 +25,87 @@
             left: 24px;
             font-size: 32px;
             font-weight: bold;
+            color: #ff4466;
             z-index: 100;
         }
         .item {
             position: absolute;
             cursor: pointer;
             transition: transform 0.1s;
+            /* 硬件加速，减少手机卡顿 */
+            will-change: transform;
         }
         .item:active {
-            transform: scale(0.9);
+            transform: scale(0.85);
         }
         .gameImg {
             width: 80px;
             height: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
-        /* 浮动加分扣分文字 */
         .floatText {
             position: absolute;
-            font-size:28px;
-            font-weight:bold;
-            pointer-events:none;
+            font-size: 28px;
+            font-weight: bold;
+            pointer-events: none;
             animation: floatUp 1s ease-out forwards;
-            z-index:99;
+            z-index: 99;
         }
-        .add {
-            color:#28a745;
-        }
-        .minus {
-            color:#dc3545;
-        }
+        .add { color: #28a745; }
+        .minus { color: #dc3545; }
         @keyframes floatUp {
-            0% {opacity:1; transform: translateY(0);}
-            100% {opacity:0; transform: translateY(-60px);}
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-60px); }
         }
-        /* 爱心动画 */
-        .heart{
-            position:absolute;
-            width:30px;
-            background:#ff4466;
-            transform:rotate(-45deg);
-            animation: heartFly 3.5s ease-out forwards;
-            pointer-events:none;
+        /* 爱心样式放大，更漂亮 */
+        .heart {
+            position: absolute;
+            transform: rotate(-45deg);
+            animation: heartFly 4.2s ease-out forwards;
+            pointer-events: none;
+            will-change: transform, opacity;
         }
-        .heart:before,.heart:after{
-            content:"";
-            width:30px;
-            height:30px;
-            background:#ff4466;
-            border-radius:50%;
-            position:absolute;
+        .heart:before, .heart:after {
+            content: "";
+            border-radius: 50%;
+            position: absolute;
+            background: inherit;
         }
-        .heart:before{top:-15px;left:0;}
-        .heart:after{top:0;right:-15px;}
-        @keyframes heartFly{
-            0%{opacity:1;transform: translateY(0) rotate(-45deg);}
-            100%{opacity:0;transform: translateY(-800px) rotate(-45deg);}
+        .heart:before { top: -50%; left: 0; }
+        .heart:after { top: 0; right: -50%; }
+        @keyframes heartFly {
+            0% { opacity: 1; transform: translateY(0) rotate(-45deg) scale(1); }
+            100% { opacity: 0; transform: translateY(-100vh) rotate(-45deg) scale(0.25); }
         }
-        /* 胜利弹窗 */
-        #winModal{
-            position:fixed;
-            top:0;left:0;
-            width:100%;height:100%;
-            background:rgba(0,0,0,0.6);
-            display:none;
-            z-index:200;
-            align-items:center;
-            justify-content:center;
-            flex-direction:column;
+        #winModal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
         }
-        #winModal img{
-            max-width:80%;
-            border-radius:12px;
+        #winModal img {
+            max-width: 85%;
+            max-height: 75vh;
+            border-radius: 16px;
+            box-shadow: 0 0 40px rgba(255,100,150,0.6);
+            animation: popIn 0.5s ease-out;
         }
-        #winModal p{
-            color:white;
-            font-size:28px;
-            margin-top:20px;
+        @keyframes popIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
     </style>
 </head>
 <body>
     <div id="scoreBox">当前分数：0</div>
     <div id="winModal">
-        <img src="end_bonus.png" alt="奖励合照">
-        <p>🎉恭喜！收集完成！</p>
+        <img src="end_bonus.png" alt="合照">
     </div>
 
     <script>
@@ -114,87 +113,108 @@
         const winModal = document.getElementById("winModal");
         let score = 0;
         const targetScore = 52;
+        let winTriggered = false;
+        let musicStarted = false;
+        let audioPlayer = null;
 
-        // 图片配置：文件名 + 对应分值
+        // 图片分数配置：3张加分 +1张扣分
         const imageConfig = [
-            {src:"photo1.png", point:1},
-            {src:"photo2.png", point:2},
-            {src:"photo3.png", point:3},
-            {src:"photo4.png", point:-2}
+            { src: "photo1.png", point: 1 },
+            { src: "photo2.png", point: 2 },
+            { src: "photo3.png", point: 3 },
+            { src: "photo4.png", point: -2 }
         ];
 
-        // 弹出浮动加减文字
-        function showFloatText(x,y,text,isAdd){
+        // 弹出加减文字
+        function showFloatText(x, y, text, isAdd) {
             const div = document.createElement('div');
-            div.className = "floatText " + (isAdd?"add":"minus");
+            div.className = "floatText " + (isAdd ? "add" : "minus");
             div.innerText = text;
             div.style.left = x + "px";
             div.style.top = y + "px";
             document.body.appendChild(div);
-            setTimeout(()=>div.remove(),1000);
+            setTimeout(() => div.remove(), 1000);
         }
 
-        // 创建随机图片
-        function createRandomItem(){
+        // 随机生成图片
+        function createRandomItem() {
             const item = document.createElement("img");
-            // 随机选其中一张图片
             const randomItem = imageConfig[Math.floor(Math.random() * imageConfig.length)];
             item.src = randomItem.src;
             const getPoint = randomItem.point;
-
             item.className = "item gameImg";
-            // 随机位置
-            const x = Math.random()*(window.innerWidth - 100);
-            const y = Math.random()*(window.innerHeight - 200) + 80;
+            const x = Math.random() * (window.innerWidth - 100);
+            const y = Math.random() * (window.innerHeight - 200) + 80;
             item.style.left = x + "px";
             item.style.top = y + "px";
 
-            item.onclick = function(e){
+            item.onclick = function (e) {
                 score += getPoint;
-                if(score < 0) score = 0;
+                if (score < 0) score = 0;
                 updateScore();
-
-                if(getPoint >0){
-                    showFloatText(e.clientX,e.clientY,`+${getPoint}`,true);
-                }else{
-                    showFloatText(e.clientX,e.clientY,`${getPoint}`,false);
+                if (getPoint > 0) {
+                    showFloatText(e.clientX, e.clientY, `+${getPoint}`, true);
+                } else {
+                    showFloatText(e.clientX, e.clientY, `${getPoint}`, false);
                 }
-
                 item.remove();
+                checkMusic();
                 checkWin();
-            }
+            };
             document.body.appendChild(item);
-            // 7秒没点击自动消失
-            setTimeout(()=>{if(item.parentNode) item.remove()},7000);
+            // 7秒后自动消失
+            setTimeout(() => { if (item.parentNode) item.remove(); }, 7000);
         }
 
-        function updateScore(){
-            scoreBox.innerText = "当前分数："+score;
+        function updateScore() {
+            scoreBox.innerText = "当前分数：" + score;
         }
 
-        function checkWin(){
-            if(score >= targetScore){
-                winModal.style.display="flex";
-                createManyHearts();
+        // 分数≥2 启动音乐，只初始化一次，循环播放
+        function checkMusic() {
+            if (score >= 2 && !musicStarted) {
+                musicStarted = true;
+                audioPlayer = new Audio("win_music.mp3");
+                audioPlayer.volume = 0.6;
+                audioPlayer.loop = true;
+                audioPlayer.play().catch(err=>{
+                    console.log("音乐等待用户点击触发",err);
+                });
             }
         }
 
-        // 胜利爱心爆发
-        function createManyHearts(){
-            for(let i=0;i<25;i++){
-                setTimeout(()=>{
+        // 胜利触发爱心爆炸
+        function checkWin() {
+            if (score >= targetScore && !winTriggered) {
+                winTriggered = true;
+                winModal.style.display = "flex";
+                explosionHearts();
+            }
+        }
+
+        // 爱心：更大、数量多，优化手机性能
+        function explosionHearts() {
+            const colors = ["#ff4466", "#ff6699", "#ff88bb", "#ff3388", "#ff5588", "#ff99cc", "#ff1155"];
+            // 一共100颗大爱心，分批生成，防止手机一次性渲染卡死
+            const totalHearts = 100;
+            for (let i = 0; i < totalHearts; i++) {
+                setTimeout(() => {
                     const h = document.createElement("div");
-                    h.className="heart";
-                    h.style.left = Math.random()*window.innerWidth +"px";
+                    h.className = "heart";
+                    // 爱心尺寸放大：25 ~ 60px
+                    const size = 25 + Math.random() * 35;
+                    h.style.width = size + "px";
+                    h.style.height = size + "px";
+                    h.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    h.style.left = Math.random() * window.innerWidth + "px";
                     h.style.bottom = "0px";
                     document.body.appendChild(h);
-                    setTimeout(()=>h.remove(),3500);
-                },i*120);
+                    setTimeout(() => h.remove(), 4200);
+                }, i * 45); // 拉长间隔，减轻手机瞬间压力
             }
         }
-
-        // 每1.4秒生成一张图片
-        setInterval(createRandomItem, 1400);
+        // 生成图片间隔拉长，降低手机压力（原来是1400，改成1800）
+        setInterval(createRandomItem, 1800);
     </script>
 </body>
 </html>

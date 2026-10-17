@@ -9,7 +9,7 @@
         margin: 0;
         padding: 0;
         box-sizing: border-box;
-        font-family: system-ui, sans-serif;
+        font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
     }
 
     html, body {
@@ -19,32 +19,34 @@
         background: #fff0f5;
     }
 
-    .headerWrap{
-        position:fixed;
-        top:24px;
-        left:24px;
-        z-index:300;
+    /* 顶部标题+进度条 */
+    .headerWrap {
+        position: fixed;
+        top: 24px;
+        left: 24px;
+        z-index: 300;
     }
-    #titleTip{
-        font-size:22px;
-        color:#ff4466;
-        font-weight:bold;
-        margin-bottom:8px;
+    #titleTip {
+        font-size: 22px;
+        color: #ff4466;
+        font-weight: bold;
+        margin-bottom: 8px;
     }
-    .progressBg{
-        width:260px;
-        height:22px;
-        background:#ffd6e0;
-        border-radius:99px;
-        overflow:hidden;
+    .progressBg {
+        width: 260px;
+        height: 22px;
+        background: #ffd6e0;
+        border-radius: 999px;
+        overflow: hidden;
     }
-    #progressFill{
-        height:100%;
-        width:0%;
-        background:#ff4466;
-        transition:width 0.35s ease-out;
+    #progressFill {
+        height: 100%;
+        width: 0%;
+        background: #ff4466;
+        transition: width 0.35s ease-out;
     }
 
+    /* 右上角按钮 */
     #stopMusicBtn {
         position: fixed;
         top: 24px;
@@ -58,18 +60,28 @@
         z-index: 301;
         cursor: pointer;
     }
-    #restartBtn{
-        position:fixed;
-        top:64px;
-        right:24px;
-        padding:6px 12px;
-        border:none;
-        border-radius:999px;
-        background:#dd4466;
-        color:#fff;
-        font-size:14px;
-        z-index:301;
-        cursor:pointer;
+    #restartBtn {
+        position: fixed;
+        top: 64px;
+        right: 24px;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 999px;
+        background: #dd4466;
+        color: #fff;
+        font-size: 14px;
+        z-index: 301;
+        cursor: pointer;
+    }
+
+    /* 右侧照片区域 画面右2/3 */
+    #photoArea {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 66.67%;
+        height: 100%;
+        z-index: 10;
     }
 
     .item {
@@ -87,22 +99,7 @@
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
 
-    .floatText {
-        position: absolute;
-        font-size:18px;
-        font-weight:bold;
-        pointer-events:none;
-        animation:floatUp 1.1s ease‑out forwards;
-        z-index:99;
-        white‑space:nowrap;
-        color:#991a38;
-    }
-
-    @keyframes floatUp {
-        0% { opacity:1; transform:translateY(0) scale(1.05); }
-        100% { opacity:0; transform:translateY(-80px) scale(0.92); }
-    }
-
+    /* 爱心样式 */
     .heart {
         position: absolute;
         pointer-events: none;
@@ -112,13 +109,17 @@
             54% 20%, 64% 18%, 74% 20%, 82% 26%, 88% 34%, 89% 44%,
             86% 54%, 80% 64%, 72% 74%, 62% 84%
         );
-        animation: heartFly 7s ease-out forwards;
     }
-    @keyframes heartFly {
+    @keyframes heartFlyNormal {
         0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
         100% { opacity: 0; transform: translateY(-110vh) rotate(15deg) scale(0.3); }
     }
+    @keyframes heartFlyCrazy {
+        0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+        100% { opacity: 0; transform: translateY(-120vh) rotate(30deg) scale(0.25); }
+    }
 
+    /* 通关合照弹窗 */
     #winModal {
         position: fixed;
         top: 0;
@@ -157,20 +158,22 @@
 </head>
 
 <body>
-<div class="headerWrap">
-    <div id="titleTip">收集回忆碎片 · 东京人寿</div>
-    <div class="progressBg">
-        <div id="progressFill"></div>
+    <div class="headerWrap">
+        <div id="titleTip">Lovelia</div>
+        <div class="progressBg">
+            <div id="progressFill"></div>
+        </div>
     </div>
-</div>
 
-<button id="stopMusicBtn">关闭音乐</button>
-<button id="restartBtn">重新开始</button>
+    <button id="stopMusicBtn">关闭音乐</button>
+    <button id="restartBtn">重新开始</button>
 
-<div id="winModal">
-    <img src="end_bonus.png" alt="合照">
-    <button id="closeModalBtn">关闭图片</button>
-</div>
+    <div id="photoArea"></div>
+
+    <div id="winModal">
+        <img src="end_bonus.png" alt="合照">
+        <button id="closeModalBtn">关闭图片</button>
+    </div>
 
 <script>
     const progressFill = document.getElementById("progressFill");
@@ -178,72 +181,42 @@
     const stopBtn = document.getElementById("stopMusicBtn");
     const restartBtn = document.getElementById("restartBtn");
     const closeModalBtn = document.getElementById("closeModalBtn");
-
-    // 【按你给的完整顺序的歌词队列】
-    const lyricQueue = [
-        "花了它手边经已没储蓄吧",
-        "勒停吧仙境可以逝似烟霞",
-        "我又怕下次换了年号，路边不再有花",
-        "省了它担心经济，下秒更差",
-        "讲好一起看奥运，都怕有突发坏事件，搁误着韶华",
-        "快乐，会不会重来",
-        "这刻你再忍一下，怎会毫无代价",
-        "明年保了寿命，谁说一定有伴侣与东京",
-        "明年即使有热血，初樱初雪又如何约定",
-        "趁一切，都正好，撮合无尽的偶然来尽兴",
-        "随意浪费着美景，才是对它不敬",
-        "好与差，都只不过是个巧合",
-        "一转侧，这种天国，或已再不",
-        "几生修到有这日，不把握，会消失",
-        "有没有锦绣前程，应否扫这刻的兴",
-        "听我从头辩证",
-        "明年保了寿命，谁说一定有伴侣与东京",
-        "明年即使有热血，初樱初雪又如何约定",
-        "趁一切，都正好，撮合无尽的偶然来尽兴",
-        "随意浪费着美景，才是对它不敬",
-        "没有资格说感性，但最高兴那刻，会现形",
-        "常在怀疑着以后，是重重逆境，所以这样拼",
-        "这派对后，难道你知，在哪里有星",
-        "明年保了寿命，无法肯定有力气有憧憬",
-        "明年的签证未过，温馨小店或游人过剩",
-        "有风吕，跟暖酒，你就无谓，等雪融才尽兴",
-        "完美在这夜擦肩，难道你可补领",
-        "还说下次做更好，谁料这刻是尾声"
-    ];
-    let lyricPointer = 0; //歌词指针，顺序取出
+    const photoArea = document.getElementById("photoArea");
 
     let progress = 0;
-    const MAX_PROGRESS = 52;    // 目标回到52
-    const MUSIC_TRIGGER = 12;   //很早启动音乐，让歌曲跑起来，52分到高潮
+    const MAX_PROGRESS = 52;
+    const MUSIC_TRIGGER = 1; // 拿到1分就播放音乐
     let winTriggered = false;
     let musicStarted = false;
     let audioPlayer = null;
-    let heartLoopTimer = null;
+    let heartTimer = null;
 
     const imageConfig = [
-        { src:"photo1.png", progressAdd:4 },
-        { src:"photo2.png", progressAdd:6 },
-        { src:"photo3.png", progressAdd:9 },
-        { src:"photo4.png", progressAdd:-4 }
+        { src: "photo1.png", progressAdd: 4 },
+        { src: "photo2.png", progressAdd: 6 },
+        { src: "photo3.png", progressAdd: 9 },
+        { src: "photo4.png", progressAdd: -4 }
     ];
 
-    // 重置全部游戏状态（重新开始按钮）
+    // 重置游戏全部状态
     function resetGame(){
         progress = 0;
-        lyricPointer = 0;
         winTriggered = false;
         musicStarted = false;
         progressFill.style.width = "0%";
         winModal.style.display = "none";
+        photoArea.innerHTML = "";
+
         if(audioPlayer){
             audioPlayer.pause();
             audioPlayer.currentTime = 0;
             audioPlayer = null;
         }
-        if(heartLoopTimer){
-            clearInterval(heartLoopTimer);
-            heartLoopTimer = null;
+        if(heartTimer){
+            clearInterval(heartTimer);
+            heartTimer = null;
         }
+        startNormalHeart();
     }
     restartBtn.onclick = resetGame;
 
@@ -252,9 +225,9 @@
             audioPlayer.pause();
             audioPlayer.currentTime = 0;
             musicStarted = false;
-            if(heartLoopTimer){
-                clearInterval(heartLoopTimer);
-                heartLoopTimer = null;
+            if(heartTimer){
+                clearInterval(heartTimer);
+                heartTimer = null;
             }
         }
     };
@@ -263,35 +236,61 @@
         winModal.style.display = "none";
     };
 
-    // 弹出浮动歌词，允许重叠，存活1.1秒
-    function showFloatText(x,y,text){
-        const div = document.createElement("div");
-        div.className = "floatText";
-        div.innerText = text;
-        div.style.left = x+"px";
-        div.style.top = y+"px";
-        document.body.appendChild(div);
-        setTimeout(()=>div.remove(),1100);
+    // 普通爱心（开局就启动）
+    function startNormalHeart(){
+        const colors = ["#ff4466","#ff2255","#ff6699","#ff88bb","#ff3388","#ff5588","#ff99cc"];
+        heartTimer = setInterval(()=>{
+            const h = document.createElement("div");
+            h.className = "heart";
+            const size = 30 + Math.random() * 45;
+            h.style.width = size + "px";
+            h.style.height = size + "px";
+            h.style.background = colors[Math.floor(Math.random() * colors.length)];
+            h.style.left = Math.random() * window.innerWidth + "px";
+            h.style.bottom = Math.random() * window.innerHeight + "px";
+            h.style.animation = "heartFlyNormal 7s ease-out forwards";
+            document.body.appendChild(h);
+            setTimeout(()=>h.remove(),7000);
+        },200);
     }
 
+    // 通关浮夸爱心，超多超快
+    function startCrazyHeart(){
+        clearInterval(heartTimer);
+        const colors = ["#ff4466","#ff2255","#ff6699","#ff88bb","#ff3388","#ff5588","#ff99cc"];
+        heartTimer = setInterval(()=>{
+            for(let i=0;i<3;i++){
+                const h = document.createElement("div");
+                h.className = "heart";
+                const size = 20 + Math.random() * 55;
+                h.style.width = size + "px";
+                h.style.height = size + "px";
+                h.style.background = colors[Math.floor(Math.random() * colors.length)];
+                h.style.left = Math.random() * window.innerWidth + "px";
+                h.style.bottom = Math.random() * window.innerHeight + "px";
+                h.style.animation = "heartFlyCrazy 3.2s ease-out forwards";
+                document.body.appendChild(h);
+                setTimeout(()=>h.remove(),3200);
+            }
+        },80);
+    }
+
+    // 生成右侧照片
     function createRandomItem() {
         const item = document.createElement("img");
         const randomItem = imageConfig[Math.floor(Math.random() * imageConfig.length)];
         item.src = randomItem.src;
         item.className = "item gameImg";
 
-        const x = Math.random() * (window.innerWidth - 100);
-        const y = Math.random() * (window.innerHeight - 200) + 80;
+        const areaWidth = photoArea.clientWidth || 600;
+        const areaHeight = photoArea.clientHeight || 800;
+        const x = Math.random() * Math.max(40, areaWidth - 120);
+        const y = Math.random() * Math.max(40, areaHeight - 200) + 80;
+
         item.style.left = x + "px";
         item.style.top = y + "px";
 
-        item.onclick = function (e) {
-            // 按顺序取歌词，循环回到开头
-            const currentLyric = lyricQueue[lyricPointer];
-            showFloatText(e.clientX, e.clientY, currentLyric);
-            lyricPointer +=1;
-            if(lyricPointer >= lyricQueue.length) lyricPointer = 0;
-
+        item.onclick = function () {
             progress += randomItem.progressAdd;
             if(progress < 0) progress = 0;
             if(progress > MAX_PROGRESS) progress = MAX_PROGRESS;
@@ -302,7 +301,7 @@
             checkWin();
         };
 
-        document.body.appendChild(item);
+        photoArea.appendChild(item);
         setTimeout(() => {
             if (item.parentNode) item.remove();
         }, 7000);
@@ -314,34 +313,21 @@
             audioPlayer = new Audio("win_music.mp3");
             audioPlayer.volume = 0.6;
             audioPlayer.loop = true;
-            audioPlayer.play().catch(err => console.log("需要用户点击触发音频",err));
-            startContinuousHeart();
+            audioPlayer.play().catch(err => console.log("浏览器需要点击页面后播放音频",err));
         }
-    }
-
-    function startContinuousHeart(){
-        const colors = ["#ff4466","#ff2255","#ff6699","#ff88bb","#ff3388","#ff5588","#ff99cc"];
-        heartLoopTimer = setInterval(()=>{
-            const h = document.createElement("div");
-            h.className = "heart";
-            const size = 30 + Math.random() * 45;
-            h.style.width = size + "px";
-            h.style.height = size + "px";
-            h.style.background = colors[Math.floor(Math.random() * colors.length)];
-            h.style.left = Math.random() * window.innerWidth + "px";
-            h.style.bottom = Math.random() * window.innerHeight + "px";
-            document.body.appendChild(h);
-            setTimeout(()=>h.remove(),7000);
-        },200);
     }
 
     function checkWin() {
         if (progress >= MAX_PROGRESS && !winTriggered) {
             winTriggered = true;
             winModal.style.display = "flex";
+            startCrazyHeart();
         }
     }
 
+    // 页面加载立刻开启普通爱心
+    startNormalHeart();
+    // 定时生成照片
     setInterval(createRandomItem, 1400);
 </script>
 </body>

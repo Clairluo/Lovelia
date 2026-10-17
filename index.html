@@ -114,10 +114,14 @@
         const winModal = document.getElementById("winModal");
         let score = 0;
         const targetScore = 52;
-        // 加分图片列表
-        const bonusList = ["photo1.png","photo2.png","photo3.png"];
-        // 扣分图片
-        const badImg = "photo4.png";
+
+        // 图片配置：文件名 + 对应分值
+        const imageConfig = [
+            {src:"photo1.png", point:1},
+            {src:"photo2.png", point:2},
+            {src:"photo3.png", point:3},
+            {src:"photo4.png", point:-2}
+        ];
 
         // 弹出浮动加减文字
         function showFloatText(x,y,text,isAdd){
@@ -130,19 +134,15 @@
             setTimeout(()=>div.remove(),1000);
         }
 
-        // 创建随机图片：有概率出加分图，小概率出photo4扣分图
+        // 创建随机图片
         function createRandomItem(){
             const item = document.createElement("img");
-            // 70%概率加分，30%概率扣分
-            const isBonus = Math.random() < 0.7;
-            if(isBonus){
-                const randomBonusImg = bonusList[Math.floor(Math.random() * bonusList.length)];
-                item.src = randomBonusImg;
-            }else{
-                item.src = badImg;
-            }
-            item.className = "item gameImg";
+            // 随机选其中一张图片
+            const randomItem = imageConfig[Math.floor(Math.random() * imageConfig.length)];
+            item.src = randomItem.src;
+            const getPoint = randomItem.point;
 
+            item.className = "item gameImg";
             // 随机位置
             const x = Math.random()*(window.innerWidth - 100);
             const y = Math.random()*(window.innerHeight - 200) + 80;
@@ -150,20 +150,21 @@
             item.style.top = y + "px";
 
             item.onclick = function(e){
-                if(isBonus){
-                    score +=1;
-                    showFloatText(e.clientX,e.clientY,"+1",true);
-                }else{
-                    score -=2;
-                    if(score < 0) score = 0;
-                    showFloatText(e.clientX,e.clientY,"-2",false);
-                }
+                score += getPoint;
+                if(score < 0) score = 0;
                 updateScore();
+
+                if(getPoint >0){
+                    showFloatText(e.clientX,e.clientY,`+${getPoint}`,true);
+                }else{
+                    showFloatText(e.clientX,e.clientY,`${getPoint}`,false);
+                }
+
                 item.remove();
                 checkWin();
             }
             document.body.appendChild(item);
-            // 图片超时自动消失
+            // 7秒没点击自动消失
             setTimeout(()=>{if(item.parentNode) item.remove()},7000);
         }
 
@@ -192,7 +193,7 @@
             }
         }
 
-        // 定时生成图片，1.4秒出来一张，不会一次性爆一大堆
+        // 每1.4秒生成一张图片
         setInterval(createRandomItem, 1400);
     </script>
 </body>

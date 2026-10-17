@@ -2,7 +2,6 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <!-- 手机视口优化，解决移动端缩放卡顿 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lovelia</title>
     <style>
@@ -28,11 +27,23 @@
             color: #ff4466;
             z-index: 100;
         }
+        /* 关闭音乐按钮 右上角 */
+        #stopMusicBtn{
+            position: fixed;
+            top:30px;
+            right:24px;
+            padding:8px 14px;
+            border:none;
+            border-radius:999px;
+            background:#ff6688;
+            color:white;
+            font-size:16px;
+            z-index:101;
+        }
         .item {
             position: absolute;
             cursor: pointer;
             transition: transform 0.1s;
-            /* 硬件加速，减少手机卡顿 */
             will-change: transform;
         }
         .item:active {
@@ -58,25 +69,23 @@
             0% { opacity: 1; transform: translateY(0); }
             100% { opacity: 0; transform: translateY(-60px); }
         }
-        /* 爱心样式放大，更漂亮 */
+        /* ✅真正爱心，clip-path裁切，不再是菱形 */
         .heart {
             position: absolute;
-            transform: rotate(-45deg);
-            animation: heartFly 4.2s ease-out forwards;
             pointer-events: none;
             will-change: transform, opacity;
+            /* 爱心形状裁切 */
+            clip-path: polygon(
+                50% 92%, 38% 84%, 28% 74%, 20% 64%, 14% 54%, 11% 44%,
+                12% 34%, 18% 26%, 26% 20%, 36% 18%, 46% 20%, 50% 26%,
+                54% 20%, 64% 18%, 74% 20%, 82% 26%, 88% 34%, 89% 44%,
+                86% 54%, 80% 64%, 72% 74%, 62% 84%
+            );
+            animation: heartFly 7s ease‑out forwards;
         }
-        .heart:before, .heart:after {
-            content: "";
-            border-radius: 50%;
-            position: absolute;
-            background: inherit;
-        }
-        .heart:before { top: -50%; left: 0; }
-        .heart:after { top: 0; right: -50%; }
         @keyframes heartFly {
-            0% { opacity: 1; transform: translateY(0) rotate(-45deg) scale(1); }
-            100% { opacity: 0; transform: translateY(-100vh) rotate(-45deg) scale(0.25); }
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-110vh) scale(0.25); }
         }
         #winModal {
             position: fixed;
@@ -104,6 +113,7 @@
 </head>
 <body>
     <div id="scoreBox">当前分数：0</div>
+    <button id="stopMusicBtn">关闭音乐</button>
     <div id="winModal">
         <img src="end_bonus.png" alt="合照">
     </div>
@@ -111,13 +121,15 @@
     <script>
         const scoreBox = document.getElementById("scoreBox");
         const winModal = document.getElementById("winModal");
+        const stopBtn = document.getElementById("stopMusicBtn");
+
         let score = 0;
         const targetScore = 52;
         let winTriggered = false;
         let musicStarted = false;
         let audioPlayer = null;
+        let heartLoopTimer = null;
 
-        // 图片分数配置：3张加分 +1张扣分
         const imageConfig = [
             { src: "photo1.png", point: 1 },
             { src: "photo2.png", point: 2 },
@@ -125,7 +137,20 @@
             { src: "photo4.png", point: -2 }
         ];
 
-        // 弹出加减文字
+        // 关闭音乐按钮逻辑
+        stopBtn.onclick = function(){
+            if(audioPlayer){
+                audioPlayer.pause();
+                audioPlayer.currentTime = 0;
+                musicStarted = false;
+                // 音乐关闭，停止持续生成爱心
+                if(heartLoopTimer){
+                    clearInterval(heartLoopTimer);
+                    heartLoopTimer = null;
+                }
+            }
+        };
+
         function showFloatText(x, y, text, isAdd) {
             const div = document.createElement('div');
             div.className = "floatText " + (isAdd ? "add" : "minus");
@@ -136,7 +161,6 @@
             setTimeout(() => div.remove(), 1000);
         }
 
-        // 随机生成图片
         function createRandomItem() {
             const item = document.createElement("img");
             const randomItem = imageConfig[Math.floor(Math.random() * imageConfig.length)];
@@ -162,7 +186,6 @@
                 checkWin();
             };
             document.body.appendChild(item);
-            // 7秒后自动消失
             setTimeout(() => { if (item.parentNode) item.remove(); }, 7000);
         }
 
@@ -170,7 +193,7 @@
             scoreBox.innerText = "当前分数：" + score;
         }
 
-        // 分数≥2 启动音乐，只初始化一次，循环播放
+        // 分数≥2启动音乐
         function checkMusic() {
             if (score >= 2 && !musicStarted) {
                 musicStarted = true;
@@ -180,40 +203,35 @@
                 audioPlayer.play().catch(err=>{
                     console.log("音乐等待用户点击触发",err);
                 });
+                // ✅音乐播放期间，持续源源不断生成爱心，直到音乐被关掉
+                startContinuousHeart();
             }
         }
 
-        // 胜利触发爱心爆炸
+        // 持续生成爱心：音乐播放就一直飘爱心，音乐关闭就停止
+        function startContinuousHeart(){
+            const colors = ["#ff4466", "#ff6699", "#ff88bb", "#ff3388", "#ff5588", "#ff99cc", "#ff1155"];
+            heartLoopTimer = setInterval(()=>{
+                const h = document.createElement("div");
+                h.className = "heart";
+                const size = 25 + Math.random() * 45;
+                h.style.width = size + "px";
+                h.style.height = size + "px";
+                h.style.background = colors[Math.floor(Math.random() * colors.length)];
+                h.style.left = Math.random() * window.innerWidth + "px";
+                h.style.bottom = "0px";
+                document.body.appendChild(h);
+                setTimeout(()=>h.remove(),7000);
+            },220);
+        }
+
         function checkWin() {
             if (score >= targetScore && !winTriggered) {
                 winTriggered = true;
                 winModal.style.display = "flex";
-                explosionHearts();
             }
         }
 
-        // 爱心：更大、数量多，优化手机性能
-        function explosionHearts() {
-            const colors = ["#ff4466", "#ff6699", "#ff88bb", "#ff3388", "#ff5588", "#ff99cc", "#ff1155"];
-            // 一共100颗大爱心，分批生成，防止手机一次性渲染卡死
-            const totalHearts = 100;
-            for (let i = 0; i < totalHearts; i++) {
-                setTimeout(() => {
-                    const h = document.createElement("div");
-                    h.className = "heart";
-                    // 爱心尺寸放大：25 ~ 60px
-                    const size = 25 + Math.random() * 35;
-                    h.style.width = size + "px";
-                    h.style.height = size + "px";
-                    h.style.background = colors[Math.floor(Math.random() * colors.length)];
-                    h.style.left = Math.random() * window.innerWidth + "px";
-                    h.style.bottom = "0px";
-                    document.body.appendChild(h);
-                    setTimeout(() => h.remove(), 4200);
-                }, i * 45); // 拉长间隔，减轻手机瞬间压力
-            }
-        }
-        // 生成图片间隔拉长，降低手机压力（原来是1400，改成1800）
         setInterval(createRandomItem, 1800);
     </script>
 </body>
